@@ -1,0 +1,32 @@
+import java.util.ArrayList;
+
+public class Artist extends Entity {
+
+    protected ArrayList<Song> songs;
+    protected ArrayList<Album> albums;
+
+    public Artist(String name, int id) {
+        super(name, id);
+    }
+
+    protected ArrayList<Song> getSongs() {
+        return songs;
+    }
+
+    protected void setSongs(ArrayList<Song> songs) {
+        this.songs = songs;
+    }
+
+    protected ArrayList<Album> getAlbums() {
+        return albums;
+    }
+
+    protected void setAlbums(ArrayList<Album> albums) {
+        this.albums = albums;
+    }
+
+    public void addSong(Song s) {
+        songs.add(s);
+    }
+
+}
