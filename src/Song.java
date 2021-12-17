@@ -9,8 +9,8 @@ public class Song extends Entity {
         protected Artist performer;
 
         //added those nulls in
-        public Song(String name, int id) {
-            super(name, id);
+        public Song(String name) {
+            super(name);
             //album = new Album("");
             //performer = new Artist("");
         }

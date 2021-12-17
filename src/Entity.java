@@ -8,8 +8,8 @@ public class Entity {
     //todo change entity id
     public Entity() {
         this.name = "";
-        //counter++;
-        //this.entityID = counter;
+        counter++;
+        this.entityID = counter;
     }
 
 
@@ -18,11 +18,10 @@ public class Entity {
     }
 
 
-    public Entity(String name, int id) {
+    public Entity(String name) {
         this.name = name;
-        this.entityID = id;
         counter++;
-        //this.entityID = counter;
+        this.entityID = counter;
     }
 
     public String getName() {

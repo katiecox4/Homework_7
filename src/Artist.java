@@ -5,8 +5,8 @@ public class Artist extends Entity {
     protected ArrayList<Song> songs;
     protected ArrayList<Album> albums;
 
-    public Artist(String name, int id) {
-        super(name, id);
+    public Artist(String name) {
+        super(name);
     }
 
     protected ArrayList<Song> getSongs() {

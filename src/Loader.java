@@ -43,7 +43,7 @@ public class Loader {
                 int index = 0;
                 while (rs.next()) {
                     // read the result set
-                    listOfSongs.add(new Song(rs.getString("name"), rs.getInt("id")));
+                    listOfSongs.add(new Song(rs.getString("name")));
                     songLinks[0][index] = rs.getInt("id");
                     if(rs.getObject("artist") != null ){
                         songLinks[1][index] = rs.getInt("artist");
@@ -56,7 +56,7 @@ public class Loader {
 
                 index = 0;
                 while (rs.next()) {
-                    listOfAlbums.add(new Album(rs.getString("name"), rs.getInt("id")));
+                    listOfAlbums.add(new Album(rs.getString("name")));
                     albumLinks[0][index] = rs.getInt("id");
                     if(rs.getObject("artist") != null ){
                         albumLinks[1][index] = rs.getInt("artist");
@@ -66,7 +66,7 @@ public class Loader {
 
                 index = 0;
                 while (rs.next()) {
-                    listOfArtists.add(new Artist(rs.getString("name"), rs.getInt("id")));
+                    listOfArtists.add(new Artist(rs.getString("name")));
                 }
                 fillSQL(songLinks, albumLinks);
                 findDuplicates();
@@ -142,17 +142,17 @@ public class Loader {
     public void addSong(String title, int id){
         //Song s = new Song(title);
 
-        listOfSongs.add(new Song(title, id));
+        listOfSongs.add(new Song(title));
     }
 
     public void addArtist(String name, int id){
-        Artist a = new Artist(name, id);
+        Artist a = new Artist(name);
 
         listOfArtists.add(a);
     }
 
     public void addAlbum(String name, int id){
-        Album a = new Album(name, id);
+        Album a = new Album(name);
         listOfAlbums.add(a);
     }
 
@@ -310,7 +310,7 @@ public class Loader {
                 }
             }
             if(check == false){
-                newArtist = new Artist(attribute[z][1],z);
+                newArtist = new Artist(attribute[z][1]);
                 listOfArtists.add(newArtist);
                 listOfSongs.get(z).setPerformer(newArtist);
             }
@@ -323,7 +323,7 @@ public class Loader {
                 }
             }
             if(check == false){
-                newAlbum = new Album(attribute[z][2],z);
+                newAlbum = new Album(attribute[z][2]);
                 listOfAlbums.add(newAlbum);
                 listOfSongs.get(z).setAlbum(newAlbum);
             }

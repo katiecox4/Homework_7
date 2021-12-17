@@ -31,6 +31,12 @@ public class Display {
         menu();
     }
 
+    /**
+     * menu
+     * The main user interface of Display. Prompts user for input, calls the appropriate
+     * function, then calls itself again unless exited.
+     * @throws IOException
+     */
     public static void menu() throws IOException {
         Scanner inputGetter = new Scanner(System.in);
         int intResponse;
@@ -93,7 +99,7 @@ public class Display {
     public static void menuItem9(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of artist you would like to check for:");
-        String artistName = inputGetter.next();
+        String artistName = inputGetter.nextLine();
 
         Artist artist = useMusicBrainz(artistName);
         if(artist != null) {
@@ -313,17 +319,10 @@ public class Display {
 
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of song: ");
-        String songName = inputGetter.next();
-        System.out.println("Enter song ID: ");
-        int id = inputGetter.nextInt();
-        while (duplicateSong(id)) {
-            System.out.println("That song ID already exists. " +
-                    "Enter different ID:");
-            id = inputGetter.nextInt();
-        }
+        String songName = inputGetter.nextLine();
 
         System.out.println("Enter name of artist: ");
-        String artistName = inputGetter.next();
+        String artistName = inputGetter.nextLine();
         for(int a = 0; a < loader.listOfArtists.size(); a++){
             if(loader.listOfArtists.get(a).name.equals(
                     artistName.toLowerCase(Locale.ROOT))){
@@ -332,38 +331,25 @@ public class Display {
             }
         }
         if(check == false) {
-            System.out.println("Enter ID for new artist: ");
-            intResponse = inputGetter.nextInt();
-            while (duplicateArtist(intResponse)) {
-                System.out.println("That artist ID already exists. " +
-                        "Enter different ID:");
-                intResponse = inputGetter.nextInt();
-            }
-            artist = new Artist(artistName, intResponse);
+            artist = new Artist(artistName);
             loader.listOfArtists.add(artist);
         }
         System.out.println("Enter name of album: ");
-        String albumName = inputGetter.next();
+        String albumName = inputGetter.nextLine();
         for(int a = 0; a < loader.listOfAlbums.size(); a++){
             if(loader.listOfAlbums.get(a).name.equals(
                     albumName.toLowerCase(Locale.ROOT))){
                 album = loader.listOfAlbums.get(a);
                 check = true;
             }
-            if(check == false){
-                System.out.println("Enter ID for new album: ");
-                intResponse = inputGetter.nextInt();
-                while (duplicateAlbum(intResponse)) {
-                    System.out.println("That album ID already exists. " +
-                            "Enter different ID:");
-                    intResponse = inputGetter.nextInt();
-                }
-                album = new Album(albumName, intResponse);
-                album.setArtist(artist);
+            /*if(check == false){
+
+                album = new Album(albumName);
                 loader.listOfAlbums.add(album);
-            }
+                album.setArtist(artist);
+            }*/
         }
-        Song song = new Song(songName, id);
+        Song song = new Song(songName);
         song.setPerformer(artist);
         song.setAlbum(album);
         loader.listOfSongs.add(song);
@@ -373,20 +359,12 @@ public class Display {
         Scanner inputGetter = new Scanner(System.in);
         Artist artist = null;
         Boolean check = false;
-        int intResponse;
 
         System.out.println("Enter name of album: ");
-        String albumName = inputGetter.next();
+        String albumName = inputGetter.nextLine();
 
-        System.out.println("Enter album ID: ");
-        int id = inputGetter.nextInt();
-        while (duplicateAlbum(id)) {
-            System.out.println("That album ID already exists. " +
-                    "Enter different ID:");
-            id = inputGetter.nextInt();
-        }
         System.out.println("Enter name of artist: ");
-        String artistName = inputGetter.next();
+        String artistName = inputGetter.nextLine();
         for(int a = 0; a < loader.listOfArtists.size(); a++){
             if(loader.listOfArtists.get(a).name.equals(
                     artistName.toLowerCase(Locale.ROOT))){
@@ -395,17 +373,10 @@ public class Display {
             }
         }
         if(check == false) {
-            System.out.println("Enter ID for new artist: ");
-            intResponse = inputGetter.nextInt();
-            while (duplicateArtist(intResponse)) {
-                System.out.println("That artist ID already exists. " +
-                        "Enter different ID:");
-                intResponse = inputGetter.nextInt();
-            }
-            artist = new Artist(artistName, intResponse);
+            artist = new Artist(artistName);
             loader.listOfArtists.add(artist);
         }
-        Album album = new Album(albumName, id);
+        Album album = new Album(albumName);
         album.setArtist(artist);
         loader.listOfAlbums.add(album);
     }
@@ -413,14 +384,8 @@ public class Display {
     public static void addArtist(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of artist: ");
-        String artist = inputGetter.next();
-        System.out.println("Enter artist ID: ");
-        int id = inputGetter.nextInt();
-        while (duplicateArtist(id)) {
-            System.out.println("That artist ID already exists. " +
-                    "Enter different ID:");
-            id = inputGetter.nextInt();
-        }
-        loader.listOfArtists.add(new Artist(artist, id));
+        String artist = inputGetter.nextLine();
+
+        loader.listOfArtists.add(new Artist(artist));
     }
 }

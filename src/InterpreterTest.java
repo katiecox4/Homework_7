@@ -24,6 +24,12 @@ class LoadTest {
     }
 
     @org.junit.jupiter.api.Test
+    void testAddSong(){
+        L.loadSQL();
+        d.addSong();
+    }
+
+    @org.junit.jupiter.api.Test
     void testLoadSQL(){
         L.loadSQL();
         System.out.println(L.listOfSongs.get(0).name);
