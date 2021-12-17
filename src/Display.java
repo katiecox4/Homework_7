@@ -96,6 +96,12 @@ public class Display {
         }
     }
 
+    /**
+     * menuItem9
+     * a shell for the useMusicBrainz function, which takes the name of an artist and
+     * uses the online database to see if it is an alias for an artist already in our
+     * program
+     */
     public static void menuItem9(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of artist you would like to check for:");
@@ -109,6 +115,10 @@ public class Display {
         }
     }
 
+    /**
+     * saveSQL
+     * updates the music.db file with songs, albums and artists added by the user
+     */
     public static void saveSQL(){
         Connection connection = null;
         Song song;
@@ -151,6 +161,12 @@ public class Display {
         }
     }
 
+    /**
+     * writeXML
+     * writes an arraylist (from a playlist) to an XML document
+     * @param songs
+     * @throws IOException
+     */
     public static void writeXML(ArrayList<Song> songs)throws IOException {
         FileWriter fileWriter = new FileWriter("Playlist" + playlists.size());
         PrintWriter printWriter =new PrintWriter(fileWriter);
@@ -165,6 +181,12 @@ public class Display {
         fileWriter.close();
     }
 
+    /**
+     * SongtoXML
+     * takes a song and writes it and all of its parameters to a string
+     * @param s
+     * @return
+     */
     public static String SongtoXML(Song s){
         return ("\n<song id=\"" + s.entityID + "\">\n" + "<title>\n" + s.name +
                 "</title>\n" + "\n<artist id=\"" + s.performer.entityID  + "\">\n" + s.performer.name
@@ -172,11 +194,24 @@ public class Display {
                 "</album>\n</song>");
     }
 
+    /**
+     * getNamesMB
+     * using the XML file, gets name from specific artist
+     * @param artist
+     * @return
+     */
     public static String getNamesMB(NodeList artist){    //pass in childNodes of artists
         NodeList name = artist.item(0).getChildNodes();
         return name.item(0).getNodeValue();
     }
 
+    /**
+     * useMusicBrainz
+     * Uses MusicBrainz database to search all alternate names for an artist to see if
+     * they match the name the user is checking for
+     * @param artistName
+     * @return
+     */
     public static Artist useMusicBrainz(String artistName){
         String name;
         String url = "https://musicbrainz.org/ws/2/artist?query=" + artistName
@@ -211,6 +246,10 @@ public class Display {
         return null;
     }
 
+    /**
+     * playPlaylist
+     * prints names of all songs in a playlist
+     */
     public static void playPlaylist(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter number of playlist: ");
@@ -228,6 +267,11 @@ public class Display {
         }
     }
 
+    /**
+     * createPlaylist
+     * lets the user add songs one at a time to create a playlist
+     * @throws IOException
+     */
     public static void createPlaylist() throws IOException {
         Scanner inputGetter = new Scanner(System.in);
         Playlist pl = new Playlist();
@@ -251,9 +295,13 @@ public class Display {
             //allows for duplicates because what if you want a song twice
         }
         playlists.add(pl);
-        writeXML(pl.listOfSongs);
+        //writeXML(pl.listOfSongs); todo null
     }
 
+    /**
+     * showAllPlaylists
+     * prints names of all playlists, which should just be Playlist 1, Playlist 2, etc
+     */
     public static void showAllPlaylists(){
         Playlist pl = new Playlist();
         for(int i = 0; i < playlists.size(); i++){
@@ -266,51 +314,41 @@ public class Display {
         }
     }
 
+    /**
+     * showAllSongs
+     * prints names of all songs in a specific list, either all in library or a playlist
+     * @param songs
+     */
     public static void showAllSongs(ArrayList<Song> songs){
         for(int i = 0; i < songs.size(); i++){
             System.out.println(songs.get(i).name);
         }
     }
 
+    /**
+     * showAllAlbums
+     * prints names of all albums in library
+     */
     public static void showAllAlbums(){
         for(int i = 0; i < loader.listOfAlbums.size(); i++){
             System.out.println(loader.listOfAlbums.get(i).name);
         }
     }
 
+    /**
+     * showAllArtists
+     * prints names of all artists in library
+     */
     public static void showAllArtists(){
         for(int i = 0; i < loader.listOfArtists.size(); i++){
             System.out.println(loader.listOfArtists.get(i).name);
         }
     }
 
-    public static boolean duplicateSong(int id){
-        for(int a = 0; a < loader.listOfSongs.size(); a++){
-            if(loader.listOfSongs.get(a).entityID == id){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean duplicateArtist(int id){
-        for(int a = 0; a < loader.listOfArtists.size(); a++){
-            if(loader.listOfArtists.get(a).entityID == id){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean duplicateAlbum(int id){
-        for(int a = 0; a < loader.listOfAlbums.size(); a++){
-            if(loader.listOfAlbums.get(a).entityID == id){
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * addSong
+     * lets user add a song to the library
+     */
     public static void addSong(){
         Artist artist = null;
         Album album = null;
@@ -355,6 +393,10 @@ public class Display {
         loader.listOfSongs.add(song);
     }
 
+    /**
+     * addAlbum
+     * lets user add an album to the library
+     */
     public static void addAlbum(){
         Scanner inputGetter = new Scanner(System.in);
         Artist artist = null;
@@ -381,6 +423,10 @@ public class Display {
         loader.listOfAlbums.add(album);
     }
 
+    /**
+     * addArtist
+     * lets user add an artist to the library
+     */
     public static void addArtist(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of artist: ");
