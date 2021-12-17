@@ -4,27 +4,44 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Scanner;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 //todo check for duplicates before add thing
 //todo add songs to albums and songs and alubms to artists
 //https://musicbrainz.org/ws/2/artist?query=beatles&fmt=xml
 public class Display {
-    Loader loader = new Loader();
-    ArrayList<Playlist> playlists = new ArrayList<>();
+    static Loader loader = new Loader();
+    static ArrayList<Playlist> playlists = new ArrayList<>();
 
-    public void menu(){
+    public static void main(String[] args) throws IOException {
+        loader.loadSQL();
+        menu();
+    }
+
+    public static void menu() throws IOException {
         Scanner inputGetter = new Scanner(System.in);
         int intResponse;
         String strResponse;
 
         //display all artists or all albums
-        System.out.println("1. Display all songs\n2. Display all albums\n3. Display all artists" +
-                "\n4. Display playlists\n5. Add song\n6. Add artist\n7. Add album\n8. Create playlist" +
-                "\n9. Create playlist based on artist\n10. Play playlist\n11. Exit");
+        System.out.println("1. Display all songs\n2. Display all albums\n" +
+                "3. Display all artists\n4. Display playlists\n5. Add song\n" +
+                "6. Add artist\n7. Add album\n8. Create playlist" +
+                "\n9. Enter alternate name to see if artist is in database" +
+                "\n10. Play playlist\n11. Exit");
         //add a delete option?
         intResponse = inputGetter.nextInt();
 
@@ -58,14 +75,14 @@ public class Display {
             createPlaylist();
             menu();
         }else if(intResponse == 9){
-            //create playlist with musicbrainz
-
+            menuItem9();
+            menu();
         }else if(intResponse == 10){
             playPlaylist();
             menu();
         }else if(intResponse == 11){
-            //save
-            //exit
+            saveSQL();
+            System.out.println("Goodbye!");
         }else{
             //could throw error instead?
             System.out.println("error in intResponse");
@@ -73,17 +90,88 @@ public class Display {
         }
     }
 
-    public String getNamesMB(NodeList artist){    //pass in childNodes of artists
+    public static void menuItem9(){
+        Scanner inputGetter = new Scanner(System.in);
+        System.out.println("Enter name of artist you would like to check for:");
+        String artistName = inputGetter.next();
+
+        Artist artist = useMusicBrainz(artistName);
+        if(artist != null) {
+            System.out.println(artistName + " found in database as " + artist.name + ".");
+        }else{
+            System.out.println(artistName + "Not found in database.");
+        }
+    }
+
+    public static void saveSQL(){
+        Connection connection = null;
+        Song song;
+        Album album;
+        Artist artist;
+        try {
+            connection = DriverManager.getConnection("jdbc:sqlite:src/music.db");   //renamed that but not sure it took
+            Statement statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            for(int i = 0; i < loader.listOfSongs.size(); i ++) {
+                song = loader.listOfSongs.get(i);
+                statement.executeUpdate("insert or ignore into songs values("
+                + song.entityID + ", \'" + song.name + "\', " + song.performer.entityID +
+                        ", " + song.album.entityID +")");
+            }
+            for(int i = 0; i < loader.listOfAlbums.size(); i ++) {
+                album = loader.listOfAlbums.get(i);
+                statement.executeUpdate("insert or ignore into songs values("
+                        + album.entityID + ", \'" + album.name + "\', " +
+                        album.artist.entityID + ")");
+            }
+            for(int i = 0; i < loader.listOfArtists.size(); i ++) {
+                artist = loader.listOfArtists.get(i);
+                statement.executeUpdate("insert or ignore into songs values("
+                        + artist.entityID + ", \'" + artist.name + "\')");
+            }
+        } catch (SQLException e) {
+            // if the error message is "out of memory",
+            // it probably means no database file is found
+            System.err.println(e.getMessage());
+        } finally {
+            try {
+                if (connection != null)
+                    connection.close();
+            } catch (SQLException e) {
+                // connection close failed.
+                System.err.println(e.getMessage());
+            }
+        }
+    }
+
+    public static void writeXML(ArrayList<Song> songs)throws IOException {
+        FileWriter fileWriter = new FileWriter("Playlist" + playlists.size());
+        PrintWriter printWriter =new PrintWriter(fileWriter);
+        printWriter.print("<?xml version=\"1.0\"  ?>\n<library>\n<songs>");
+        for(int x = 0; x < songs.size(); x++){
+            printWriter.print(SongtoXML(songs.get(x)));
+        }
+
+        printWriter.print("\n</albums>\n</library>");
+
+        fileWriter.flush();
+        fileWriter.close();
+    }
+
+    public static String SongtoXML(Song s){
+        return ("\n<song id=\"" + s.entityID + "\">\n" + "<title>\n" + s.name +
+                "</title>\n" + "\n<artist id=\"" + s.performer.entityID  + "\">\n" + s.performer.name
+                + "\n</artist>\n<album id=\"" + s.album.entityID + "\">\n" + s.album.name +
+                "</album>\n</song>");
+    }
+
+    public static String getNamesMB(NodeList artist){    //pass in childNodes of artists
         NodeList name = artist.item(0).getChildNodes();
         return name.item(0).getNodeValue();
     }
 
-    public boolean useMusicBrainz(Artist check){
-        Scanner inputGetter = new Scanner(System.in);
-
-        System.out.println("Enter name of artist you would like to check for:");
-        String artistName = inputGetter.next();
-
+    public static Artist useMusicBrainz(String artistName){
         String name;
         String url = "https://musicbrainz.org/ws/2/artist?query=" + artistName
                 + "&fmt=xml";
@@ -106,7 +194,7 @@ public class Display {
                 name = loader.listOfArtists.get(j).name;
                 for (int i = 0; i < artists.getLength(); i++) {
                     if (getNamesMB(artists.item(i).getChildNodes()).equals(name)) {
-                        return true;
+                        return loader.listOfArtists.get(j);
                     }
                     //does that work?
                 }
@@ -114,10 +202,10 @@ public class Display {
         } catch (Exception e) {
             System.out.println("Parsing error:" + e);
         }
-        return false;
+        return null;
     }
 
-    public void playPlaylist(){
+    public static void playPlaylist(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter number of playlist: ");
         int playlist = inputGetter.nextInt();
@@ -134,7 +222,7 @@ public class Display {
         }
     }
 
-    public void createPlaylist(){
+    public static void createPlaylist() throws IOException {
         Scanner inputGetter = new Scanner(System.in);
         Playlist pl = new Playlist();
         boolean check = false;
@@ -157,9 +245,10 @@ public class Display {
             //allows for duplicates because what if you want a song twice
         }
         playlists.add(pl);
+        writeXML(pl.listOfSongs);
     }
 
-    public void showAllPlaylists(){
+    public static void showAllPlaylists(){
         Playlist pl = new Playlist();
         for(int i = 0; i < playlists.size(); i++){
             pl = playlists.get(i);
@@ -171,62 +260,167 @@ public class Display {
         }
     }
 
-    public void showAllSongs(ArrayList<Song> songs){
+    public static void showAllSongs(ArrayList<Song> songs){
         for(int i = 0; i < songs.size(); i++){
             System.out.println(songs.get(i).name);
         }
     }
 
-    public void showAllAlbums(){
+    public static void showAllAlbums(){
         for(int i = 0; i < loader.listOfAlbums.size(); i++){
             System.out.println(loader.listOfAlbums.get(i).name);
         }
     }
 
-    public void showAllArtists(){
+    public static void showAllArtists(){
         for(int i = 0; i < loader.listOfArtists.size(); i++){
             System.out.println(loader.listOfArtists.get(i).name);
         }
     }
 
-    public boolean checkForDuplicates(){
+    public static boolean duplicateSong(int id){
+        for(int a = 0; a < loader.listOfSongs.size(); a++){
+            if(loader.listOfSongs.get(a).entityID == id){
+                return true;
+            }
+        }
         return false;
     }
 
-    public void addSong(){
+    public static boolean duplicateArtist(int id){
+        for(int a = 0; a < loader.listOfArtists.size(); a++){
+            if(loader.listOfArtists.get(a).entityID == id){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean duplicateAlbum(int id){
+        for(int a = 0; a < loader.listOfAlbums.size(); a++){
+            if(loader.listOfAlbums.get(a).entityID == id){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void addSong(){
+        Artist artist = null;
+        Album album = null;
+        Boolean check = false;
+        int intResponse;
+
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of song: ");
-        String name = inputGetter.next();
-        /*System.out.println("Enter name of album: ");
-        String album = inputGetter.next();
+        String songName = inputGetter.next();
+        System.out.println("Enter song ID: ");
+        int id = inputGetter.nextInt();
+        while (duplicateSong(id)) {
+            System.out.println("That song ID already exists. " +
+                    "Enter different ID:");
+            id = inputGetter.nextInt();
+        }
+
         System.out.println("Enter name of artist: ");
-        String artist = inputGetter.next();*/
-        System.out.println("Enter song id: ");
-        //todo need to have check for duplicate, a lot
-        int id = inputGetter.nextInt();
-        loader.listOfSongs.add(new Song(name, id));
-    }
-
-    public void addAlbum(){
-        Scanner inputGetter = new Scanner(System.in);
+        String artistName = inputGetter.next();
+        for(int a = 0; a < loader.listOfArtists.size(); a++){
+            if(loader.listOfArtists.get(a).name.equals(
+                    artistName.toLowerCase(Locale.ROOT))){
+                artist = loader.listOfArtists.get(a);
+                check = true;
+            }
+        }
+        if(check == false) {
+            System.out.println("Enter ID for new artist: ");
+            intResponse = inputGetter.nextInt();
+            while (duplicateArtist(intResponse)) {
+                System.out.println("That artist ID already exists. " +
+                        "Enter different ID:");
+                intResponse = inputGetter.nextInt();
+            }
+            artist = new Artist(artistName, intResponse);
+            loader.listOfArtists.add(artist);
+        }
         System.out.println("Enter name of album: ");
-        String album = inputGetter.next();
-        /*System.out.println("Enter name of artist: ");
-        String artist = inputGetter.next();*/
-        System.out.println("Enter album id: ");
-        int id = inputGetter.nextInt();
-        loader.listOfAlbums.add(new Album(album, id));
-        //need to find album
-        //loader.listOfAlbums.get(loader.listOfAlbums.size()-1).setArtist(new Artist(artist));
+        String albumName = inputGetter.next();
+        for(int a = 0; a < loader.listOfAlbums.size(); a++){
+            if(loader.listOfAlbums.get(a).name.equals(
+                    albumName.toLowerCase(Locale.ROOT))){
+                album = loader.listOfAlbums.get(a);
+                check = true;
+            }
+            if(check == false){
+                System.out.println("Enter ID for new album: ");
+                intResponse = inputGetter.nextInt();
+                while (duplicateAlbum(intResponse)) {
+                    System.out.println("That album ID already exists. " +
+                            "Enter different ID:");
+                    intResponse = inputGetter.nextInt();
+                }
+                album = new Album(albumName, intResponse);
+                album.setArtist(artist);
+                loader.listOfAlbums.add(album);
+            }
+        }
+        Song song = new Song(songName, id);
+        song.setPerformer(artist);
+        song.setAlbum(album);
+        loader.listOfSongs.add(song);
     }
 
-    public void addArtist(){
+    public static void addAlbum(){
+        Scanner inputGetter = new Scanner(System.in);
+        Artist artist = null;
+        Boolean check = false;
+        int intResponse;
+
+        System.out.println("Enter name of album: ");
+        String albumName = inputGetter.next();
+
+        System.out.println("Enter album ID: ");
+        int id = inputGetter.nextInt();
+        while (duplicateAlbum(id)) {
+            System.out.println("That album ID already exists. " +
+                    "Enter different ID:");
+            id = inputGetter.nextInt();
+        }
+        System.out.println("Enter name of artist: ");
+        String artistName = inputGetter.next();
+        for(int a = 0; a < loader.listOfArtists.size(); a++){
+            if(loader.listOfArtists.get(a).name.equals(
+                    artistName.toLowerCase(Locale.ROOT))){
+                artist = loader.listOfArtists.get(a);
+                check = true;
+            }
+        }
+        if(check == false) {
+            System.out.println("Enter ID for new artist: ");
+            intResponse = inputGetter.nextInt();
+            while (duplicateArtist(intResponse)) {
+                System.out.println("That artist ID already exists. " +
+                        "Enter different ID:");
+                intResponse = inputGetter.nextInt();
+            }
+            artist = new Artist(artistName, intResponse);
+            loader.listOfArtists.add(artist);
+        }
+        Album album = new Album(albumName, id);
+        album.setArtist(artist);
+        loader.listOfAlbums.add(album);
+    }
+
+    public static void addArtist(){
         Scanner inputGetter = new Scanner(System.in);
         System.out.println("Enter name of artist: ");
         String artist = inputGetter.next();
-        System.out.println("Enter artist id: ");
+        System.out.println("Enter artist ID: ");
         int id = inputGetter.nextInt();
+        while (duplicateArtist(id)) {
+            System.out.println("That artist ID already exists. " +
+                    "Enter different ID:");
+            id = inputGetter.nextInt();
+        }
         loader.listOfArtists.add(new Artist(artist, id));
-        //need to find album
     }
 }
